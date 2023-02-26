@@ -1,31 +1,22 @@
-package mock
+package golottie
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 )
 
-type Animation struct {
-	Width       int
-	Height      int
-	FramesTotal int
-	Data        []byte
+type mockAnimation struct {
+	width       int
+	height      int
+	framesTotal int
+	data        []byte
 	ts          *httptest.Server
 }
 
-type gContext interface {
-	context.Context
-	Error(error)
-}
-
-func (a *Animation) GetURL(what gContext) (url string) {
+func (a *mockAnimation) GetURL() (url string) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		_, err := w.Write(a.Data)
-		if err != nil {
-			//ctx.Error(err)
-		}
+		w.Write(a.data)
 	})
 	ts := httptest.NewServer(handler)
 	a.ts = ts
@@ -33,18 +24,18 @@ func (a *Animation) GetURL(what gContext) (url string) {
 	return ts.URL
 }
 
-func (a *Animation) GetWidth() int {
-	return a.Width
+func (a *mockAnimation) GetWidth() int {
+	return a.width
 }
 
-func (a *Animation) GetHeight() int {
-	return a.Height
+func (a *mockAnimation) GetHeight() int {
+	return a.height
 }
 
-func (a *Animation) GetFramesTotal() int {
-	return a.FramesTotal
+func (a *mockAnimation) GetFramesTotal() int {
+	return a.framesTotal
 }
 
-func (a *Animation) Close() {
+func (a *mockAnimation) Close() {
 	a.ts.Close()
 }

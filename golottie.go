@@ -6,15 +6,6 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-type animation interface {
-	Close()
-	GetURL(ctx Context) string
-
-	GetFramesTotal() int
-	GetWidth() int
-	GetHeight() int
-}
-
 type Renderer struct {
 	framesTotal int
 	FramesDone  int
@@ -25,10 +16,10 @@ func New(ctx Context) (renderer *Renderer) {
 	return &Renderer{ctx: ctx}
 }
 
-func (r *Renderer) SetAnimation(animation animation) error {
+func (r *Renderer) SetAnimation(animation Animation) error {
 	r.framesTotal = animation.GetFramesTotal()
 	if err := chromedp.Run(r.ctx,
-		chromedp.Navigate(animation.GetURL(r.ctx)),
+		chromedp.Navigate(animation.GetURL()),
 	); err != nil {
 		return err
 	}

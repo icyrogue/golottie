@@ -6,12 +6,22 @@ import (
 )
 
 var (
-	EOF = errors.New("EOF")
+	EOF                 = errors.New("EOF")
+	ErrNilAnimationData = errors.New("animation data is nil")
 )
 
 type Context interface {
 	context.Context
 	Error(err error)
+}
+
+type Animation interface {
+	Close()
+	GetURL() string
+
+	GetFramesTotal() int
+	GetWidth() int
+	GetHeight() int
 }
 
 type Frame struct {

@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/icyrogue/golottie/internal/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,29 +21,29 @@ var badHTML []byte
 var noAnimHTML = []byte("<html><body>( ´･_･`)</body></html>")
 
 var (
-	okAnimation = mock.Animation{
-		Width:       600,
-		Height:      600,
-		FramesTotal: 68,
-		Data:        mockHTML,
+	okAnimation = mockAnimation{
+		width:       600,
+		height:      600,
+		framesTotal: 68,
+		data:        mockHTML,
 	}
-	badHTMLAnimation = mock.Animation{
-		Width:       600,
-		Height:      600,
-		FramesTotal: 68,
-		Data:        badHTML,
+	badHTMLAnimation = mockAnimation{
+		width:       600,
+		height:      600,
+		framesTotal: 68,
+		data:        badHTML,
 	}
-	zeroFramesAnimation = mock.Animation{
-		Width:       600,
-		Height:      600,
-		FramesTotal: 0,
-		Data:        mockHTML,
+	zeroFramesAnimation = mockAnimation{
+		width:       600,
+		height:      600,
+		framesTotal: 0,
+		data:        mockHTML,
 	}
-	noAnimDataAnimation = mock.Animation{
-		Width:       600,
-		Height:      600,
-		FramesTotal: 68,
-		Data:        noAnimHTML,
+	noAnimDataAnimation = mockAnimation{
+		width:       600,
+		height:      600,
+		framesTotal: 68,
+		data:        noAnimHTML,
 	}
 )
 
@@ -61,7 +60,7 @@ func Test_RenderFrame(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		animation   animation
+		animation   *mockAnimation
 		expectedErr error
 	}{
 		{
@@ -137,7 +136,7 @@ func Test_RenderFrameSVG(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		animation   animation
+		animation   *mockAnimation
 		expectedErr error
 	}{
 		{
@@ -180,10 +179,10 @@ func Test_RenderFrameSVG(t *testing.T) {
 }
 
 type noURL struct {
-	mock.Animation
+	mockAnimation
 }
 
-func (u *noURL) GetURL(_ Context) string {
+func (u *noURL) GetURL() string {
 	return "(ノಠ益ಠ)ノ彡┻━┻"
 }
 
