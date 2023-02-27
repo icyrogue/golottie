@@ -1,6 +1,7 @@
 ## golottie  
 ![Coverage](https://img.shields.io/badge/Coverage-100.0%25-brightgreen)
-![](https://goreportcard.com/badge/github.com/icyrogue/golottie)  
+![](https://goreportcard.com/badge/github.com/icyrogue/golottie)
+[![Go Reference](https://pkg.go.dev/badge/github.com/icyrogue/golottie.svg)](https://pkg.go.dev/github.com/icyrogue/golottie)  
 Render [Lottie](https://airbnb.design/lottie/) animations from [Bodymovin](https://aescripts.com/bodymovin/) using headless browser instance.  
 > Basically a simpler [transitive-bullshit/puppeteer-lottie](https://github.com/transitive-bullshit/puppeteer-lottie) rewrite but in [GO](https://go.dev/) and with the ability to render frames concurrently  
 
@@ -22,12 +23,18 @@ Add the dependency explicitly if you need to
 $ go get -u github.com/icyrogue/golottie
 ```
 
-For examples checkout the [go-refernce](https://pkg.go.dev/github.com/icyrogue/golottie) and [examples](examples/) directory or just use the...
+For examples checkout the [go-reference](https://pkg.go.dev/github.com/icyrogue/golottie) and [examples](examples/) directory or just use the...
 
 ## CLI 
 ![](misc/golottie.gif) 
 gollotie provides a simple experimental CLI to render animations localy.
-It renders frames by retrieving the SVG data and converting it to PNG using [librsvg](https://github.com/GNOME/librsvg) so install it first.
+It renders frames by retrieving the SVG data and converting it to PNG using [librsvg](https://github.com/GNOME/librsvg) so install it first.  
+Install it with
+
+``` console
+$ go install github.com/icyrogue/golottie@latest
+```
+
 ``` 
 Usage of golottie:
 
