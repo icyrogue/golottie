@@ -1,8 +1,9 @@
-## golottie
-
+## golottie  
+![Coverage](https://img.shields.io/badge/Coverage-100.0%25-brightgreen)
+![](https://goreportcard.com/badge/github.com/icyrogue/golottie)  
 Render [Lottie](https://airbnb.design/lottie/) animations from [Bodymovin](https://aescripts.com/bodymovin/) using headless browser instance.  
 > Basically a simpler [transitive-bullshit/puppeteer-lottie](https://github.com/transitive-bullshit/puppeteer-lottie) rewrite but in [GO](https://go.dev/) and with the ability to render frames concurrently  
-![](https://goreportcard.com/badge/github.com/icyrogue/golottie)
+
 
 
 <p align="center">

@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/AlexBeauchemin/gobadge v0.2.0 // indirect
 	github.com/charmbracelet/lipgloss v0.6.0 // indirect
 	github.com/charmbracelet/log v0.1.1 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230109101555-6b041c6303cc // indirect
