@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,36 +23,46 @@ const (
 	defWorkers = 1
 )
 
+//gocyclo:ignore
 func main() {
 	opts := parseFlags()
-	opts.flagSet.Parse(opts.args)
+	err := opts.flagSet.Parse(opts.args)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if opts.input == "" || opts.output == "" {
 		log.Fatal("--output or --input is not provided, try --help")
 	}
 
 	logger := newLogger(opts.quiet)
 	logger.Debug(*opts)
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	run(ctx, logger, opts)
 }
 
-func run(ctx context.Context, logger log.Logger, opts *options) {
+//gocyclo:ignore
+func run(ctxParent context.Context, logger log.Logger, opts *options) {
 	logger.Info("Launching the browser")
-	renderer, err := golottie.New(ctx)
-	if err != nil {
-		logger.Fatal(err.Error())
-	}
-	ctx = renderer.GetContext()
 
+	ctx, cancel := golottie.NewContext(ctxParent)
+	renderer := golottie.New(ctx)
 	logger.Info("Parsing animation", "file", opts.input)
-	animation, err := golottie.AnimationFromFile(opts.input)
+	a, err := os.ReadFile(opts.input)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	animation, err := golottie.NewAnimation(a).WithDefaultTemplate()
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
-	renderer.SetAnimation(animation)
+	err = renderer.SetAnimation(animation)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
 
 	logger.Info("Allocating frame buffer", "size", opts.bufSize)
-	input := make(chan golottie.Frame, opts.bufSize)
+	input := make(chan frame, opts.bufSize)
 	framesTotal := animation.GetFramesTotal()
 	logger.Info("Starting converter", "frames", framesTotal)
 	var wg sync.WaitGroup
@@ -59,55 +70,64 @@ func run(ctx context.Context, logger log.Logger, opts *options) {
 	for i := 0; i < opts.workers; i++ {
 		go conv.run(ctx, opts.output)
 	}
-	frame := golottie.Frame{
-		Width:  opts.width,
-		Height: opts.height,
+	frame := frame{
+		width:  opts.width,
+		height: opts.height,
 	}
 	for renderer.NextFrame() {
 		var buf string
-		err := renderer.RenderFrameSvg(&buf)
+		err := renderer.RenderFrameSVG(&buf)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		frame.Num++
-		frame.Buf = &buf
+		frame.num++
+		frame.buf = &buf
 		input <- frame
-
-		//debug
 	}
-	if renderer.Error != nil {
-		log.Fatal(err.Error())
+	if err = ctx.Errors[len(ctx.Errors)-1]; err != nil {
+		if err != golottie.EOF {
+			log.Fatal(err.Error())
+		}
 	}
-	renderer.Close()
+	cancel()
 	wg.Wait()
+	logger.Info("Done!", "output", path.Dir(opts.output))
 }
 
 type converter struct {
 	wg    *sync.WaitGroup
-	input chan golottie.Frame
+	input chan frame
 }
 
-func newConverter(wg *sync.WaitGroup, input chan golottie.Frame) *converter {
+type frame struct {
+	buf    *string
+	num    int
+	width  int
+	height int
+}
+
+func newConverter(wg *sync.WaitGroup, input chan frame) *converter {
 	return &converter{
 		wg:    wg,
 		input: input,
 	}
 }
 
-func (c *converter) run(ctx context.Context, output string) {
+//gocyclo:ignore
+func (c *converter) run(ctx golottie.Context, output string) {
 	c.wg.Add(1)
-	render := func(v golottie.Frame) error {
+	render := func(v frame) error {
 		f, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("%d.svg", time.Now().UnixMicro()))
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		_, err = f.WriteString(*v.Buf)
+		_, err = f.WriteString(*v.buf)
 		if err != nil {
 			return err
 		}
-		cmd := exec.Command("rsvg-convert", "-w", strconv.Itoa(v.Width),
-			"-h", strconv.Itoa(v.Height), f.Name(), "-o", fmt.Sprintf(output, v.Num))
+		cmd := exec.Command("rsvg-convert", "-w", strconv.Itoa(v.width),
+			"-h", strconv.Itoa(v.height), f.Name(), "-o", fmt.Sprintf(output, v.num))
 		var error []byte
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("convertion error (stderr: %s): %w, %s", error, err, cmd)
@@ -120,8 +140,10 @@ loop:
 		case <-ctx.Done():
 			break loop
 		case v := <-c.input:
-			fmt.Printf("\r---> Rendering frame %d", v.Num)
-			render(v)
+			fmt.Printf("\r---> Rendering frame %d", v.num)
+			if err := render(v); err != nil {
+				ctx.Error(err)
+			}
 		}
 	}
 	for {
@@ -129,11 +151,12 @@ loop:
 			break
 		}
 		v := <-c.input
-		fmt.Printf("\r---> Rendering frame %d", v.Num)
+		fmt.Printf("\r---> Rendering frame %d", v.num)
 		if err := render(v); err != nil {
-			log.Fatal(err.Error())
+			ctx.Error(err)
 		}
 	}
+	fmt.Printf("\r")
 	c.wg.Done()
 }
 

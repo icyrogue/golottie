@@ -2,7 +2,7 @@ package golottie
 
 import (
 	"bytes"
-	"context"
+	"embed"
 	_ "embed"
 	"html/template"
 	"io"
@@ -18,14 +18,16 @@ var animData []byte
 
 func Test_NewAnimation(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		err  error
+		name   string
+		data   []byte
+		err    error
+		frames int
 	}{
 		{
-			name: "OK_animation",
-			data: animData,
-			err:  nil,
+			name:   "OK_animation",
+			data:   animData,
+			err:    nil,
+			frames: 68,
 		},
 		{
 			name: "Nil_animation",
@@ -36,28 +38,73 @@ func Test_NewAnimation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			animation, err := NewAnimation(tt.data).WithDefaultTemplate()
+			//nolint:all // Animation.close() doesn't return an error to check
 			defer animation.Close()
 			assert.ErrorIs(t, err, tt.err)
 			if err != nil {
 				t.Log("wat", err)
 				return
 			}
-			ctx, cancel := NewContext(context.Background())
-			defer cancel()
 			url := animation.GetURL()
-			assert.Empty(t, ctx.Errors)
 			resp, err := http.Get(url)
+			assert.NoError(t, err)
 			assert.Equal(t, resp.StatusCode, http.StatusOK)
 			defer resp.Body.Close()
 			body, err := io.ReadAll(resp.Body)
 			assert.NoError(t, err)
 			testBody := parseTemplate(t, tt.data, defTemplate)
 			assert.True(t, bytes.Equal(testBody, body), "Animation data is corrupted")
+			assert.Equal(t, tt.frames, animation.GetFramesTotal(), "animation total frame count doesn't match")
 		})
 	}
+	t.Run("NilDefTemplate_animation", func(t *testing.T) {
+		animation := NewAnimation(animData)
+		defer animation.Close()
+		copy := defTemplate
+		defTemplate = embed.FS{}
+		_, err := animation.WithDefaultTemplate()
+		defTemplate = copy
+		assert.Error(t, err)
+	})
 }
 
-func parseTemplate(t *testing.T, animData []byte, templateBytes fs.FS) []byte {
+func Test_WithCustomTemplate(t *testing.T) {
+
+	tests := []struct {
+		name string
+		data map[string]interface{}
+	}{
+		{
+			name: "OK_data",
+			data: map[string]interface{}{"customData": "༼⍢༽"},
+		},
+		{
+			name: "Nil_data",
+			data: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := []byte("༼∵༽༼⍨༽")
+			templ, err := template.New("test").Parse("{{ .data}}{{ .customData}}")
+			assert.NoError(t, err)
+			a, err := NewAnimation(data).WithCustomTemplate(templ, tt.data)
+			assert.NoError(t, err)
+			cd, ok := tt.data["customData"].(string)
+			if !ok {
+				cd = ""
+			}
+			testData := append(data, cd...)
+			assert.Truef(t, bytes.Equal(a.buf.Bytes(), testData), "Expected: %s\nGot: %s", testData, a.buf.Bytes())
+		})
+	}
+	t.Run("Nil_template", func(t *testing.T) {
+		_, err := NewAnimation(nil).WithCustomTemplate(nil, nil)
+		assert.ErrorIs(t, err, ErrNilTemplate)
+	})
+}
+
+func parseTemplate(t *testing.T, animData []byte, templateFS fs.FS) []byte {
 	data := map[string]template.JS{
 		"data": template.JS(animData),
 	}

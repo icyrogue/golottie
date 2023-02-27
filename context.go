@@ -11,6 +11,9 @@ type gContext struct {
 	Errors []error
 }
 
+// NewContext wraps a new [chromedp] context created from parent ctx.
+//
+// [chromedp]: https://github.com/chromedp/chromedp
 func NewContext(ctx context.Context) (context *gContext, cancel context.CancelFunc) {
 	dpContext, cancel := chromedp.NewContext(ctx)
 
@@ -19,6 +22,7 @@ func NewContext(ctx context.Context) (context *gContext, cancel context.CancelFu
 	}, cancel
 }
 
+// Error pushes an error to context error stack.
 func (c *gContext) Error(err error) {
 	c.Errors = append(c.Errors, err)
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/icyrogue/golottie/internal/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,29 +22,29 @@ var badHTML []byte
 var noAnimHTML = []byte("<html><body>( ´･_･`)</body></html>")
 
 var (
-	okAnimation = mockAnimation{
-		width:       600,
-		height:      600,
-		framesTotal: 68,
-		data:        mockHTML,
+	okAnimation = mock.Animation{
+		Width:       600,
+		Height:      600,
+		FramesTotal: 68,
+		Data:        mockHTML,
 	}
-	badHTMLAnimation = mockAnimation{
-		width:       600,
-		height:      600,
-		framesTotal: 68,
-		data:        badHTML,
+	badHTMLAnimation = mock.Animation{
+		Width:       600,
+		Height:      600,
+		FramesTotal: 68,
+		Data:        badHTML,
 	}
-	zeroFramesAnimation = mockAnimation{
-		width:       600,
-		height:      600,
-		framesTotal: 0,
-		data:        mockHTML,
+	zeroFramesAnimation = mock.Animation{
+		Width:       600,
+		Height:      600,
+		FramesTotal: 0,
+		Data:        mockHTML,
 	}
-	noAnimDataAnimation = mockAnimation{
-		width:       600,
-		height:      600,
-		framesTotal: 68,
-		data:        noAnimHTML,
+	noAnimDataAnimation = mock.Animation{
+		Width:       600,
+		Height:      600,
+		FramesTotal: 68,
+		Data:        noAnimHTML,
 	}
 )
 
@@ -60,7 +61,7 @@ func Test_RenderFrame(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		animation   *mockAnimation
+		animation   *mock.Animation
 		expectedErr error
 	}{
 		{
@@ -89,6 +90,8 @@ func Test_RenderFrame(t *testing.T) {
 			// Update the animation to render
 			err := renderer.SetAnimation(tt.animation)
 			assert.NoError(t, err)
+			//nolint:all // Animation.close() doesn't return an error to check
+			defer tt.animation.Close()
 			// Go to the first frame and check the error buf, it will always
 			// return false and push to ctx errors if something went wrong
 			if !renderer.NextFrame() {
@@ -136,7 +139,7 @@ func Test_RenderFrameSVG(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		animation   *mockAnimation
+		animation   *mock.Animation
 		expectedErr error
 	}{
 		{
@@ -155,6 +158,8 @@ func Test_RenderFrameSVG(t *testing.T) {
 			// Update the animation to render
 			err := renderer.SetAnimation(tt.animation)
 			assert.NoError(t, err)
+			//nolint:all // Animation.close() doesn't return an error to check
+			defer tt.animation.Close()
 			// Go to the first frame and check the error buf, it will always
 			// return false and push to ctx errors if something went wrong
 			assert.True(t, renderer.NextFrame())
@@ -179,7 +184,7 @@ func Test_RenderFrameSVG(t *testing.T) {
 }
 
 type noURL struct {
-	mockAnimation
+	mock.Animation
 }
 
 func (u *noURL) GetURL() string {

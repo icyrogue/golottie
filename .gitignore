@@ -2,6 +2,7 @@ misc/render/*
 misc/demo/*
 target/*
 tmp/*
+examples/render/*
 misc/render2/*
 misc/anim2.json
 misc/animation.json
