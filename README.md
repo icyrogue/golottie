@@ -1,9 +1,11 @@
 ## golottie
 
 Render [Lottie](https://airbnb.design/lottie/) animations from [Bodymovin](https://aescripts.com/bodymovin/) using headless browser instance.  
-> Basically a simpler [transitive-bullshit/puppeteer-lottie](https://github.com/transitive-bullshit/puppeteer-lottie) rewrite but in [GO](https://go.dev/) and the ability to render frames concurrently
+> Basically a simpler [transitive-bullshit/puppeteer-lottie](https://github.com/transitive-bullshit/puppeteer-lottie) rewrite but in [GO](https://go.dev/) and with the ability to render frames concurrently
 
-![what](./misc/logo.gif)
+<p align="center">
+  <img width="100%" alt="Logo" src="misc/logo.gif">
+</p>
 
 ## Quick start 
 Add the following import in your Go module
@@ -17,10 +19,11 @@ Add the dependency explicitly if you need to
 $ go get -u github.com/icyrogue/golottie
 ```
 
-For examples checkout the go-refernce and examples directory or just use the...
+For examples checkout the [go-refernce](https://pkg.go.dev/github.com/icyrogue/golottie) and [examples](examples/) directory or just use the...
 
 ## CLI 
-gollotie provides a simple experimental CLI to render animations on your localy.
+![](misc/golottie.gif) 
+gollotie provides a simple experimental CLI to render animations localy.
 It renders frames by retrieving the SVG data and converting it to PNG using [librsvg](https://github.com/GNOME/librsvg) so install it first.
 ``` 
 Usage of golottie:
@@ -39,8 +42,9 @@ Usage of golottie:
 		(default: 1920)
 ```
 This CLI is proof of concept that animation can be rendered by multiple concurrent workers specified by `--count` option.  
-> **Notice**  
+> **Note**  
 > The width and height have to be specified manually if differ from defaults.  
+  
 > **Warning**  
 > Changes and optimizations are coming, use it if you dare!  
 
