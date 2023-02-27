@@ -130,7 +130,7 @@ func (c *converter) run(ctx golottie.Context, output string) {
 			"-h", strconv.Itoa(v.height), f.Name(), "-o", fmt.Sprintf(output, v.num))
 		var error []byte
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("convertion error (stderr: %s): %w, %s", error, err, cmd)
+			return fmt.Errorf("conversion error (stderr: %s): %w, %s", error, err, cmd)
 		}
 		return nil
 	}
