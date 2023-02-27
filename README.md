@@ -54,4 +54,8 @@ This CLI is proof of concept that animation can be rendered by multiple concurre
 > The most obvious optimization is to use [memory arena](https://github.com/golang/go/issues/51317) allocation strategy  
 > Rust rewrite?
 
+## License
+
+Released under the [MIT License](LICENSE)
+
 

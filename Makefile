@@ -14,6 +14,9 @@ build:
 	go build -o target ./...
 
 test_cmd: build
-	rm -r misc/render
-	mkdir misc/render
-	./target/golottie -i misc/test.json -o misc/render/%04d.png -w 600 -h 600 -c 4
+	./target/golottie -i misc/test.json -o misc/render2/%04d.png -w 600 -h 600 -c 4
+
+gobadge:
+	go test -covermode=count -coverprofile=coverage.out
+	go tool cover -func=coverage.out -o=coverage.out
+	gobadge -filename=coverage.out
