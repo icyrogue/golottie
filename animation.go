@@ -47,7 +47,7 @@ func NewAnimation(data []byte) *AnimationData {
 	}
 }
 
-// WithDefaultTemplate initializes animation data using embeded default template.
+// WithDefaultTemplate initializes animation data using embedded default template.
 // Returns an error if the initial data is nil or has 0 length.
 func (a *AnimationData) WithDefaultTemplate() (animation *AnimationData, err error) {
 	if a.buf == nil || a.buf.Len() <= 0 {
