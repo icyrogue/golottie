@@ -29,10 +29,14 @@ For examples checkout the [go-reference](https://pkg.go.dev/github.com/icyrogue/
 ![](misc/golottie.gif) 
 gollotie provides a simple experimental CLI to render animations localy.
 It renders frames by retrieving the SVG data and converting it to PNG using [librsvg](https://github.com/GNOME/librsvg) so install it first.  
+
+> **Note**  
+> Some package managers distribute the required rsvg-convert CLI separately
+
 Install it with
 
 ``` console
-$ go install github.com/icyrogue/golottie@latest
+$ go install github.com/icyrogue/golottie/cmd/golottie@latest
 ```
 
 ``` 

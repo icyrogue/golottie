@@ -36,7 +36,7 @@ func main() {
 
 	logger := newLogger(opts.quiet)
 	logger.Debug(*opts)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 	run(ctx, logger, opts)
 }
