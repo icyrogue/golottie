@@ -5,14 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/galihrivanto/go-inkscape"
 	"github.com/icyrogue/golottie"
 )
 
@@ -36,7 +35,7 @@ func main() {
 
 	logger := newLogger(opts.quiet)
 	logger.Debug(*opts)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
 	defer cancel()
 	run(ctx, logger, opts)
 }
@@ -81,7 +80,7 @@ func run(ctxParent context.Context, logger log.Logger, opts *options) {
 			log.Fatal(err.Error())
 		}
 		frame.num++
-		frame.buf = &buf
+		frame.buf = buf
 		input <- frame
 	}
 	if err = ctx.Errors[len(ctx.Errors)-1]; err != nil {
@@ -100,7 +99,7 @@ type converter struct {
 }
 
 type frame struct {
-	buf    *string
+	buf    string
 	num    int
 	width  int
 	height int
@@ -116,21 +115,35 @@ func newConverter(wg *sync.WaitGroup, input chan frame) *converter {
 //gocyclo:ignore
 func (c *converter) run(ctx golottie.Context, output string) {
 	c.wg.Add(1)
+	// frames := make([]frame, 16)
+	// var i int
+	// TODO: add the option for verbose output
+	proxy := inkscape.NewProxy(inkscape.Verbose(true))
+	if err := proxy.Run(); err != nil {
+		ctx.Error(err)
+	}
+	defer proxy.Close()
 	render := func(v frame) error {
-		f, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("%d.svg", time.Now().UnixMicro()))
+		f, err := os.CreateTemp(os.TempDir(), fmt.Sprintf(`%d-%d.svg`, time.Now().Unix(), v.num))
+		if err != nil {
+			return err
+		}
+		if len(v.buf) == 0 {
+			return nil
+		}
+		_, err = f.WriteString(v.buf)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		_, err = f.WriteString(*v.buf)
+		_, err = proxy.RawCommands(
+			"file-open:"+f.Name(),
+			"export-filename:"+fmt.Sprintf(output, v.num),
+			"export-do",
+			"file-close",
+		)
 		if err != nil {
 			return err
-		}
-		cmd := exec.Command("rsvg-convert", "-w", strconv.Itoa(v.width),
-			"-h", strconv.Itoa(v.height), f.Name(), "-o", fmt.Sprintf(output, v.num))
-		var error []byte
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("conversion error (stderr: %s): %w, %s", error, err, cmd)
 		}
 		return nil
 	}
@@ -144,10 +157,24 @@ loop:
 			if err := render(v); err != nil {
 				ctx.Error(err)
 			}
+			// frames[i] = v
+			// i++
+			// if i != cap(frames) {
+			// 	log.Info(i)
+			// 	continue loop
+			// }
+			// for _, v := range frames {
+			// if err := render(v); err != nil {
+			// 	ctx.Error(err)
+			// }
+			// i = 0
+			// }
 		}
 	}
 	for {
+		log.Warn("sweeping")
 		if len(c.input) <= 0 {
+			log.Warn("exiting")
 			break
 		}
 		v := <-c.input

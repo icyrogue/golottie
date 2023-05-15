@@ -3,7 +3,9 @@ module github.com/icyrogue/golottie
 go 1.19
 
 require (
+	github.com/charmbracelet/log v0.1.1
 	github.com/chromedp/chromedp v0.8.7
+	github.com/galihrivanto/go-inkscape v0.1.5
 	github.com/stretchr/testify v1.8.1
 	github.com/ysmood/gson v0.7.3
 )
@@ -11,10 +13,10 @@ require (
 require (
 	github.com/AlexBeauchemin/gobadge v0.2.0 // indirect
 	github.com/charmbracelet/lipgloss v0.6.0 // indirect
-	github.com/charmbracelet/log v0.1.1 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230109101555-6b041c6303cc // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/galihrivanto/runner v0.1.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

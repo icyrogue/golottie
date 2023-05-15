@@ -3,6 +3,6 @@ misc/demo/*
 target/*
 tmp/*
 examples/render/*
-misc/render2/*
+misc/test_render/*
 misc/anim2.json
 misc/animation.json
