@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"strings"
@@ -35,7 +36,7 @@ func main() {
 
 	logger := newLogger(opts.quiet)
 	logger.Debug(*opts)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(math.MaxInt))
 	defer cancel()
 	run(ctx, logger, opts)
 }
