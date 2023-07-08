@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"math"
 	"os"
 	"path"
 	"strconv"
