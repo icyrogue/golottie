@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +18,7 @@ import (
 )
 
 const (
+	defTimeout = 1800
 	defWidth   = 1920
 	defHeight  = 1080
 	defBufSize = 16
@@ -34,9 +36,9 @@ func main() {
 		log.Fatal("--output or --input is not provided, try --help")
 	}
 
-	logger := newLogger(opts.quiet)
+	logger := newLogger(opts.verbose)
 	logger.Debug(*opts)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(math.MaxInt))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.timeout))
 	defer cancel()
 	run(ctx, logger, opts)
 }
@@ -66,7 +68,7 @@ func run(ctxParent context.Context, logger log.Logger, opts *options) {
 	framesTotal := animation.GetFramesTotal()
 	logger.Info("Starting converter", "frames", framesTotal)
 	var wg sync.WaitGroup
-	conv := newConverter(&wg, input)
+	conv := newConverter(&wg, input, opts)
 	for i := 0; i < opts.workers; i++ {
 		go conv.run(ctx, opts.output)
 	}
@@ -97,6 +99,7 @@ func run(ctxParent context.Context, logger log.Logger, opts *options) {
 type converter struct {
 	wg    *sync.WaitGroup
 	input chan frame
+	opts  *options
 }
 
 type frame struct {
@@ -106,8 +109,9 @@ type frame struct {
 	height int
 }
 
-func newConverter(wg *sync.WaitGroup, input chan frame) *converter {
+func newConverter(wg *sync.WaitGroup, input chan frame, opts *options) *converter {
 	return &converter{
+		opts:  opts,
 		wg:    wg,
 		input: input,
 	}
@@ -116,10 +120,7 @@ func newConverter(wg *sync.WaitGroup, input chan frame) *converter {
 //gocyclo:ignore
 func (c *converter) run(ctx golottie.Context, output string) {
 	c.wg.Add(1)
-	// frames := make([]frame, 16)
-	// var i int
-	// TODO: add the option for verbose output
-	proxy := inkscape.NewProxy(inkscape.Verbose(true))
+	proxy := inkscape.NewProxy(inkscape.Verbose(c.opts.verbose))
 	if err := proxy.Run(); err != nil {
 		ctx.Error(err)
 	}
@@ -129,6 +130,10 @@ func (c *converter) run(ctx golottie.Context, output string) {
 		if err != nil {
 			return err
 		}
+		defer func() {
+			f.Close()
+			os.Remove(f.Name())
+		}()
 		if len(v.buf) == 0 {
 			return nil
 		}
@@ -136,7 +141,6 @@ func (c *converter) run(ctx golottie.Context, output string) {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 		_, err = proxy.RawCommands(
 			"file-open:"+f.Name(),
 			"export-filename:"+fmt.Sprintf(output, v.num),
@@ -158,24 +162,10 @@ loop:
 			if err := render(v); err != nil {
 				ctx.Error(err)
 			}
-			// frames[i] = v
-			// i++
-			// if i != cap(frames) {
-			// 	log.Info(i)
-			// 	continue loop
-			// }
-			// for _, v := range frames {
-			// if err := render(v); err != nil {
-			// 	ctx.Error(err)
-			// }
-			// i = 0
-			// }
 		}
 	}
 	for {
-		log.Warn("sweeping")
 		if len(c.input) <= 0 {
-			log.Warn("exiting")
 			break
 		}
 		v := <-c.input
@@ -195,9 +185,10 @@ type options struct {
 	input  string
 	output string
 
-	quiet   bool
+	verbose bool
 	workers int
 	bufSize int
+	timeout int
 
 	flagSet flag.FlagSet
 	args    []string
@@ -209,6 +200,8 @@ func parseFlags() *options {
 		height:  defHeight,
 		bufSize: defBufSize,
 		workers: defWorkers,
+		timeout: defTimeout,
+		verbose: false,
 
 		flagSet: *flag.CommandLine,
 		args:    os.Args[1:],
@@ -225,8 +218,14 @@ func parseFlags() *options {
 	opts.flagSet.IntVar(&opts.workers, "c", defWorkers, "")
 	opts.flagSet.IntVar(&opts.bufSize, "bufsize", defBufSize, "frame buffer size")
 	opts.flagSet.IntVar(&opts.bufSize, "b", defBufSize, "short for --bufsize")
-	opts.flagSet.BoolVar(&opts.quiet, "quiet", false, "should I have a mouth to scream?")
-	opts.flagSet.BoolVar(&opts.quiet, "q", false, "")
+	opts.flagSet.BoolVar(&opts.verbose, "verbose", true, "should I have a mouth to scream?")
+	opts.flagSet.BoolVar(&opts.verbose, "q", false, "")
+
+	if t, err := strconv.Atoi(os.Getenv("GOLOTTIE_TIMEOUT")); err != nil && opts.verbose {
+		log.Warn("setting timeout value to default:", err)
+	} else if t != 0 {
+		opts.timeout = t
+	}
 	opts.flagSet.Usage = func() {
 		fmt.Fprint(opts.flagSet.Output(), "Usage of golottie:\n\n")
 		var b strings.Builder
@@ -246,9 +245,9 @@ func parseFlags() *options {
 	return &opts
 }
 
-func newLogger(quiet bool) log.Logger {
+func newLogger(verbose bool) log.Logger {
 	logger := log.New()
-	if quiet {
+	if verbose {
 		logger.SetLevel(log.FatalLevel)
 	}
 	return logger
