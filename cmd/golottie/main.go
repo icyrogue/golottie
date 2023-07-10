@@ -36,8 +36,8 @@ func main() {
 	}
 
 	logger := newLogger(opts.verbose)
-	logger.Debug(*opts)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.timeout))
+	logger.Warn(*opts)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.timeout)*time.Second)
 	defer cancel()
 	run(ctx, logger, opts)
 }
@@ -225,6 +225,7 @@ func parseFlags() *options {
 	} else if t != 0 {
 		opts.timeout = t
 	}
+	log.Warn(opts.timeout)
 	opts.flagSet.Usage = func() {
 		fmt.Fprint(opts.flagSet.Output(), "Usage of golottie:\n\n")
 		var b strings.Builder
