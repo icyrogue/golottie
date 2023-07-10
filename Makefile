@@ -34,6 +34,10 @@ test_cmd: $(BUILD_PATH)/$(BIN)
 	mkdir -p $(RENDER_PATH)
 	./target/golottie -i misc/test.json -o $(RENDER_PATH)/%04d.png -w 600 -h 600 -c 4
 
+test_cmd_gpu: $(BUILD_PATH)/$(BIN)-gpu
+	mkdir -p $(RENDER_PATH)
+	./target/golottie-gpu -i misc/test.json -o $(RENDER_PATH)/%04d.png -w 600 -h 600 -c 4
+
 gobadge:
 	go test -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
