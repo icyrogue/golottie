@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/galihrivanto/go-inkscape"
 	"github.com/icyrogue/golottie"
 )
 
@@ -118,11 +117,6 @@ func newConverter(wg *sync.WaitGroup, input chan frame, opts *options) *converte
 //gocyclo:ignore
 func (c *converter) run(ctx golottie.Context, output string) {
 	c.wg.Add(1)
-	proxy := inkscape.NewProxy(inkscape.Verbose(c.opts.verbose))
-	if err := proxy.Run(); err != nil {
-		ctx.Error(err)
-	}
-	defer proxy.Close()
 	render := func(v frame) error {
 		err := os.WriteFile(fmt.Sprintf(output, v.num), v.buf, 77777)
 		if err != nil {
