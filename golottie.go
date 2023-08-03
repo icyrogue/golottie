@@ -12,7 +12,8 @@ package golottie
 
 import (
 	"fmt"
-
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/chromedp"
 )
 
@@ -33,8 +34,11 @@ func New(ctx Context) (renderer *Renderer) {
 func (r *Renderer) SetAnimation(animation Animation) error {
 	r.framesTotal = animation.GetFramesTotal()
 	if err := chromedp.Run(r.ctx,
+		//TODO: pass WxH and BG with the animation
+		emulation.SetDefaultBackgroundColorOverride().WithColor(&cdp.RGBA{0, 0, 0, 0}),
+		chromedp.EmulateViewport(1920, 1080),
 		chromedp.Navigate(animation.GetURL()),
-		//		chromedp.WaitReady("#lottie"),
+		chromedp.WaitReady(`//*[@id="lottie"]`),
 	); err != nil {
 		return err
 	}
@@ -62,6 +66,7 @@ func (r *Renderer) NextFrame() bool {
 // bytes to the provided frame buffer.
 func (r *Renderer) RenderFrame(frameBuf *[]byte) error {
 	return chromedp.Run(r.ctx,
+		// emulation.SetEmulatedMedia().WithMedia("screen"),
 		chromedp.CaptureScreenshot(frameBuf))
 }
 
