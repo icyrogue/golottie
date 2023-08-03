@@ -125,7 +125,7 @@ func (c *converter) run(ctx golottie.Context, output string) {
 	}
 	defer proxy.Close()
 	render := func(v frame) error {
-		err := os.WriteFile(fmt.Sprintf(output, v.num), v.buf, 7777)
+		err := os.WriteFile(fmt.Sprintf(output, v.num), v.buf, 77777)
 		if err != nil {
 			return err
 		}
