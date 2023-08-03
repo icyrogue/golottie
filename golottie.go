@@ -62,7 +62,7 @@ func (r *Renderer) NextFrame() bool {
 // bytes to the provided frame buffer.
 func (r *Renderer) RenderFrame(frameBuf *[]byte) error {
 	return chromedp.Run(r.ctx,
-		chromedp.Screenshot("#lottie", frameBuf, chromedp.ByQuery))
+		chromedp.CaptureScreenshot(frameBuf))
 }
 
 // RenderFrameSVG renders current frame as SVG and writes the resulting
