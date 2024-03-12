@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/galihrivanto/go-inkscape"
 	"github.com/icyrogue/golottie"
 )
 
@@ -36,7 +35,6 @@ func main() {
 	}
 
 	logger := newLogger(opts.verbose)
-	logger.Warn(*opts)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.timeout)*time.Second)
 	defer cancel()
 	run(ctx, logger, opts)
@@ -76,8 +74,8 @@ func run(ctxParent context.Context, logger log.Logger, opts *options) {
 		height: opts.height,
 	}
 	for renderer.NextFrame() {
-		var buf string
-		err := renderer.RenderFrameSVG(&buf)
+		var buf []byte
+		err := renderer.RenderFrame(&buf)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -102,7 +100,7 @@ type converter struct {
 }
 
 type frame struct {
-	buf    string
+	buf    []byte
 	num    int
 	width  int
 	height int
@@ -119,33 +117,8 @@ func newConverter(wg *sync.WaitGroup, input chan frame, opts *options) *converte
 //gocyclo:ignore
 func (c *converter) run(ctx golottie.Context, output string) {
 	c.wg.Add(1)
-	proxy := inkscape.NewProxy(inkscape.Verbose(c.opts.verbose))
-	if err := proxy.Run(); err != nil {
-		ctx.Error(err)
-	}
-	defer proxy.Close()
 	render := func(v frame) error {
-		f, err := os.CreateTemp(os.TempDir(), fmt.Sprintf(`%d-%d.svg`, time.Now().Unix(), v.num))
-		if err != nil {
-			return err
-		}
-		defer func() {
-			f.Close()
-			os.Remove(f.Name())
-		}()
-		if len(v.buf) == 0 {
-			return nil
-		}
-		_, err = f.WriteString(v.buf)
-		if err != nil {
-			return err
-		}
-		_, err = proxy.RawCommands(
-			"file-open:"+f.Name(),
-			"export-filename:"+fmt.Sprintf(output, v.num),
-			"export-do",
-			"file-close",
-		)
+		err := os.WriteFile(fmt.Sprintf(output, v.num), v.buf, 77777)
 		if err != nil {
 			return err
 		}

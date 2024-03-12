@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/charmbracelet/log v0.1.1
+	github.com/chromedp/cdproto v0.0.0-20230109101555-6b041c6303cc
 	github.com/chromedp/chromedp v0.8.7
 	github.com/galihrivanto/go-inkscape v0.1.5
 	github.com/stretchr/testify v1.8.1
@@ -11,9 +12,7 @@ require (
 )
 
 require (
-	github.com/AlexBeauchemin/gobadge v0.2.0 // indirect
 	github.com/charmbracelet/lipgloss v0.6.0 // indirect
-	github.com/chromedp/cdproto v0.0.0-20230109101555-6b041c6303cc // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/galihrivanto/runner v0.1.1 // indirect
@@ -30,11 +29,6 @@ require (
 	github.com/muesli/termenv v0.11.1-0.20220204035834-5ac8409525e0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c // indirect
-	github.com/srwiley/rasterx v0.0.0-20210519020934-456a8d69b780 // indirect
-	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
-	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4 // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
-	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

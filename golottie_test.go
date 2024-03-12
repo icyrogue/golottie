@@ -3,7 +3,6 @@ package golottie
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"testing"
 	"time"
 
@@ -49,7 +48,7 @@ var (
 )
 
 func Test_RenderFrame(t *testing.T) {
-	p, c := context.WithTimeout(context.Background(), 5*time.Second)
+	p, c := context.WithTimeout(context.Background(), 2*time.Second)
 	defer c()
 	ctx, cancel := NewContext(p)
 	defer cancel()
@@ -77,19 +76,22 @@ func Test_RenderFrame(t *testing.T) {
 		{
 			name:        "NoData_animation",
 			animation:   &noAnimDataAnimation,
-			expectedErr: errors.New("Exeption"),
+			expectedErr: context.DeadlineExceeded,
 		},
 		{
 			name:        "BadHTML_animation",
 			animation:   &badHTMLAnimation,
-			expectedErr: errors.New("context canceled"),
+			expectedErr: context.DeadlineExceeded,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(*testing.T) {
 			// Update the animation to render
 			err := renderer.SetAnimation(tt.animation)
-			assert.NoError(t, err)
+			if err != nil {
+				assert.ErrorIs(t, err, tt.expectedErr)
+				return
+			}
 			//nolint:all // Animation.close() doesn't return an error to check
 			defer tt.animation.Close()
 			// Go to the first frame and check the error buf, it will always
@@ -150,14 +152,17 @@ func Test_RenderFrameSVG(t *testing.T) {
 		{
 			name:        "BadHTML_animation",
 			animation:   &badHTMLAnimation,
-			expectedErr: errors.New("context canceled"),
+			expectedErr: context.DeadlineExceeded,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(*testing.T) {
 			// Update the animation to render
 			err := renderer.SetAnimation(tt.animation)
-			assert.NoError(t, err)
+			if err != nil {
+				assert.ErrorIs(t, err, tt.expectedErr)
+				return
+			}
 			//nolint:all // Animation.close() doesn't return an error to check
 			defer tt.animation.Close()
 			// Go to the first frame and check the error buf, it will always

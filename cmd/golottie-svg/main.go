@@ -36,6 +36,7 @@ func main() {
 	}
 
 	logger := newLogger(opts.verbose)
+	logger.Warn(*opts)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.timeout)*time.Second)
 	defer cancel()
 	run(ctx, logger, opts)
@@ -75,8 +76,8 @@ func run(ctxParent context.Context, logger log.Logger, opts *options) {
 		height: opts.height,
 	}
 	for renderer.NextFrame() {
-		var buf []byte
-		err := renderer.RenderFrame(&buf)
+		var buf string
+		err := renderer.RenderFrameSVG(&buf)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -101,7 +102,7 @@ type converter struct {
 }
 
 type frame struct {
-	buf    []byte
+	buf    string
 	num    int
 	width  int
 	height int
@@ -124,7 +125,27 @@ func (c *converter) run(ctx golottie.Context, output string) {
 	}
 	defer proxy.Close()
 	render := func(v frame) error {
-		err := os.WriteFile(fmt.Sprintf(output, v.num), v.buf, 77777)
+		f, err := os.CreateTemp(os.TempDir(), fmt.Sprintf(`%d-%d.svg`, time.Now().Unix(), v.num))
+		if err != nil {
+			return err
+		}
+		defer func() {
+			f.Close()
+			os.Remove(f.Name())
+		}()
+		if len(v.buf) == 0 {
+			return nil
+		}
+		_, err = f.WriteString(v.buf)
+		if err != nil {
+			return err
+		}
+		_, err = proxy.RawCommands(
+			"file-open:"+f.Name(),
+			"export-filename:"+fmt.Sprintf(output, v.num),
+			"export-do",
+			"file-close",
+		)
 		if err != nil {
 			return err
 		}

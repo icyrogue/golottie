@@ -17,7 +17,7 @@ type gContext struct {
 func NewContext(ctx context.Context) (context *gContext, cancel context.CancelFunc) {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:])
 	aCtx, _ := chromedp.NewExecAllocator(ctx, opts...)
-	dpContext, _ := chromedp.NewContext(aCtx)
+	dpContext, cancel := chromedp.NewContext(aCtx)
 
 	return &gContext{
 		Context: dpContext,

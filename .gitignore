@@ -6,3 +6,5 @@ examples/render/*
 misc/test_render/*
 misc/anim2.json
 misc/animation.json
+result/
+result/*
